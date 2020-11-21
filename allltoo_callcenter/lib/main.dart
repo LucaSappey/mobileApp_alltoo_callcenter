@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'models/rdv.dart';
 import 'package:intl/intl.dart';
+import 'rdv_edit.dart';
 
 
 void main() {
@@ -82,28 +83,26 @@ class _HomeState extends State<Home> {
       ),
       body: ListView.builder(
         itemBuilder: (context, index){
-
-          var date_rdv = DateTime.parse(_rdvs[index].date);
+          var date_rdv = DateTime.parse(_rdvs[index].date); // !! %Y-%M-%D form !!
           var string_date_rdv = Date_To_String(date_rdv);
 
-          if(date_rdv.isAfter(date_today()) || _rdvs[index].id == 1393)
+          if(date_rdv.isAfter(date_today()))
             return Card(
               child: Padding(
+
                 padding: const EdgeInsets.only(top:32.0, bottom: 32, left: 16.0, right: 16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text("${_rdvs[index].prospect} $index",
-                      style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey.shade600
-                      )),
-                    Text("${string_date_rdv}",
-                        style: TextStyle(
-                            color: Colors.grey.shade600)
-                    )
-                  ]
+                child: ListTile(
+                  title: Text(
+                    _rdvs[index].prospect.nom,
+                    style: TextStyle(color: Theme.of(context).primaryColor),
+                  ),
+                  subtitle: Text(
+                      'Prévu le ${string_date_rdv}'),
+                  onTap: () {
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (_) => RdvEdit(
+                            rdvID: _rdvs[index].id)));
+                  },
                 ),
               ),
             );
