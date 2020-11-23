@@ -76,10 +76,20 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.black,
+        backgroundColor: Colors.blue,
         title: Center(
             child: Text("Mes rendez-vous")
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+      onPressed: () {
+      Navigator.of(context)
+          .push(MaterialPageRoute(builder: (_) => RdvEdit()))
+          .then((_) {
+            fetchRdvs();
+          });
+      },
+      child: Icon(Icons.add),
       ),
       body: ListView.builder(
         itemBuilder: (context, index){

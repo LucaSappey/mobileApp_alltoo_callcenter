@@ -1,7 +1,9 @@
+import 'package:allltoo_callcenter/models/rdvDetails.dart';
 import 'package:flutter/material.dart';
-import 'models/rdv.dart';
+import 'models/api_response.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'models/rdvManipulation.dart';
 
 class RdvEdit extends StatefulWidget {
   final int rdvID;
@@ -13,30 +15,47 @@ class RdvEdit extends StatefulWidget {
 
 class _RdvEditState extends State<RdvEdit> {
 
-  Future<Rdv> fetchRdvs() async {
-    var url = 'http://10.0.2.2:8000/api/v1/' + widget.rdvID.toString() + '?format=json';
+  Future<RdvDetails> fetchRdv() async {
+    var url = 'http://10.0.2.2:8000/api/v1/' + widget.rdvID.toString();
     var response = await http.get(url);
-    Rdv rdv;
+    RdvDetails rdv;
     if(response.statusCode == 200){
       var rdvJson = json.decode(response.body);
-      rdv  = Rdv.fromJson(rdvJson);
-      return rdv;
+      rdv  = RdvDetails.fromJson(rdvJson);
     }
+    return rdv;
   }
-  Rdv rdv;
-  TextEditingController _titleController = TextEditingController();
-  TextEditingController _contentController = TextEditingController();
+
+  bool get isEditing => widget.rdvID != null;
+  var url = 'http://10.0.2.2:8000/api/v1/';
+  Map<String, String> headers = {"Content-type": "application/json"};
+
+  RdvDetails rdv;
+  //TextEditingController _statutController = TextEditingController();
+  TextEditingController _remarqueController = TextEditingController();
+
+
+  Future<APIResponse<bool>> updateRdv(RdvManipulation rdv) async {
+    return http.put(url + widget.rdvID.toString() + '/', headers: headers, body: jsonEncode(rdv.toJson())).then((data) {
+      if (data.statusCode == 200) {
+        return APIResponse<bool>(data: true);
+      }
+      return APIResponse<bool>(error: true, errorMessage: 'An error occured');
+    })
+        .catchError((_) => APIResponse<bool>(error: true, errorMessage: 'An error occured'));
+  }
+
 
   @override
   void initState(){
-    fetchRdvs().then((value){
-      setState(() {
-        rdv = value;
-        _titleController.text = rdv.prospect.nom;
-        _contentController.text = rdv.prospect.adresse;
-
+    if(isEditing) {
+      fetchRdv().then((value) {
+        setState(() {
+          rdv = value;
+          _remarqueController.text = rdv.remarque;
+        });
       });
-    });
+    }
     super.initState();
   }
   @override
@@ -48,18 +67,9 @@ class _RdvEditState extends State<RdvEdit> {
         child: Column(
           children: <Widget>[
             TextField(
-              controller: _titleController,
+              controller: _remarqueController,
               decoration: InputDecoration(
-                  hintText: 'Note title'
-              ),
-            ),
-
-            Container(height: 8),
-
-            TextField(
-              controller: _contentController,
-              decoration: InputDecoration(
-                  hintText: 'Note content'
+                  hintText: 'Remarque'
               ),
             ),
 
@@ -71,10 +81,40 @@ class _RdvEditState extends State<RdvEdit> {
               child: RaisedButton(
                 child: Text('Submit', style: TextStyle(color: Colors.white)),
                 color: Theme.of(context).primaryColor,
-                onPressed: () {
-                  Navigator.of(context).pop();
+                onPressed: () async {
+
+                  final rdv = RdvManipulation(
+                    id: widget.rdvID,
+                    remarque: _remarqueController.text,
+                  );
+
+                  final result = await updateRdv(rdv);
+
+                  final title = 'Envoyé';
+                  final text = result.error ? (result.errorMessage ?? "Une erreur s'est produite") : 'Vos informations ont bien été enregistrées';
+
+                  showDialog(
+                      context: context,
+                      builder: (_) => AlertDialog(
+                        title: Text(title),
+                        content: Text(text),
+                        actions: <Widget>[
+                          FlatButton(
+                            child: Text('Ok'),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                          )
+                        ],
+                      )
+                  )
+                      .then((data) {
+                  if (result.data) {
+                    Navigator.of(context).pop();
+                    }
+                  });
                 },
-              ),
+                ),
             )
           ],
         ),

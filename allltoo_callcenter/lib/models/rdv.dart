@@ -1,4 +1,4 @@
-class Rdv{
+class Rdv {
   int id;
   Prospect prospect;
   String date;
@@ -24,24 +24,21 @@ class Rdv{
   }
 }
 
-class Prospect{
+class Prospect {
   int id;
   String nom;
-  String adresse;
 
-  Prospect({this.id, this.nom, this.adresse});
+  Prospect({this.id, this.nom});
 
   Prospect.fromJson(Map<String, dynamic> json) {
     id = json['id'];
     nom = json['nom'];
-    adresse = json['adresse'];
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
     data['id'] = this.id;
     data['nom'] = this.nom;
-    data['adresse'] = this.adresse;
     return data;
   }
 }
